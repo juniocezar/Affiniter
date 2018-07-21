@@ -2,6 +2,8 @@ JARPATH := src:.:input/classes:bin:libs/jasmin-2.5.0.jar:libs/polyglot.jar:libs/
 SOOTPATH := .:input/classes:/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/rt.jar:libs/android.jar
 ANDROIDJARS := libs/
 FILE := app-debug.apk
+OUT ?= dex
+
 
 all: build android
 
@@ -44,6 +46,9 @@ a2jinst:
 
 and:
 	java -cp $(JARPATH) affiniter.Affinity -cp $(SOOTPATH) -android-jars jar-libs -allow-phantom-refs -src-prec apk -process-dir $(A)
+
+apk:
+	java -cp $(JARPATH) aff2.Affinity -pp -cp $(SOOTPATH) -pp -android-jars $(ANDROIDJARS) -allow-phantom-refs -src-prec apk -f $(OUT) -process-dir $(APK)
 
 
 limpa:

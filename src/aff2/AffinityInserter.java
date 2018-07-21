@@ -98,15 +98,15 @@ public class AffinityInserter extends BodyTransformer {
         // we wont create a new instance of this. instead we will find the
         // current one, as one must've been declared
         // if not found, create and initialize
-        // Iterator locals = body.getLocals().snapshotIterator();
-        // while(locals.hasNext()) {
-        //     Local l = (Local) locals.next();
-        //     if (l.getType() == sClass.getType()) {
-        //         var_this = l;
-        //         log(">>>> FOUND <<<<");
-        //         break;
-        //     }
-        // }
+        Iterator locals = body.getLocals().snapshotIterator();
+        while(locals.hasNext()) {
+            Local l = (Local) locals.next();
+            if (l.getType() == sClass.getType()) {
+                var_this = l;
+                log(">> Updated reference for this var");
+                break;
+            }
+        }
 
 
         // $_r_this := @this: dvfs.lac.cll.MainActivity;        
@@ -233,6 +233,6 @@ public class AffinityInserter extends BodyTransformer {
         units.insertAfter(u4, first);
         units.insertAfter(u3, first);
         units.insertAfter(u2, first);
-        units.insertAfter(u1, first);        
+        //units.insertBefore(u1, first);        
     }
 }
