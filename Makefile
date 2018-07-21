@@ -20,9 +20,9 @@ prebuild:
 	javac -cp $(JARPATH)  ./src/infoflow/axml/parsers/AXML20Parser.java -d bin
 
 build:
-	javac -cp $(JARPATH)  ./src/affiniter/AffinityInserter.java -d bin
-	javac -cp $(JARPATH)  ./src/affiniter/Affinity.java -d bin
-	javac -cp $(JARPATH)  ./src/affiniter/util/ApkFile.java -d bin
+	javac -cp $(JARPATH)  ./src/aff2/AffinityInserter.java -d bin
+	javac -cp $(JARPATH)  ./src/aff2/Affinity.java -d bin
+	javac -cp $(JARPATH)  ./src/aff2/util/ApkFile.java -d bin
 
 class:
 	clear
@@ -39,7 +39,7 @@ a2j:
 	java -cp $(JARPATH) soot.Main -cp $(SOOTPATH) -android-jars jar-libs -allow-phantom-refs -src-prec apk -f J -process-dir $(FILE)
 
 a2jinst:
-	java -cp $(JARPATH) affiniter.Affinity -cp $(SOOTPATH) -android-jars jar-libs -allow-phantom-refs -src-prec apk -f J -process-dir $(FILE)
+	java -cp $(JARPATH) aff2.Affinity -cp $(SOOTPATH) -android-jars jar-libs -allow-phantom-refs -src-prec apk -f J -process-dir $(FILE)
 
 and:
 	java -cp $(JARPATH) affiniter.Affinity -cp $(SOOTPATH) -android-jars jar-libs -allow-phantom-refs -src-prec apk -process-dir $(A)

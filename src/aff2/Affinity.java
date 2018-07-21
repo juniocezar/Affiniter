@@ -1,6 +1,6 @@
-package affiniter;
+package aff2;
 
-import affiniter.util.ApkFile;
+import aff2.util.ApkFile;
 
 import java.io.File;
 import java.io.IOException;
