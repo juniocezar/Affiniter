@@ -1,5 +1,6 @@
 JARPATH := src:.:input/classes:bin:libs/jasmin-2.5.0.jar:libs/polyglot.jar:libs/soot-2.5.1.jar:libs/android.jar:bin:libs/flowdroid/AXMLPrinter2.jar:libs/flowdroid/axml-2.0.jar:/libs/flowdroid/guala.jar:bin:bin/infoflow/axml:libs/flowdroid/axml-2.1.jar
 SOOTPATH := .:input/classes:/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/rt.jar:libs/android.jar
+ANDROIDJARS := libs/
 FILE := app-debug.apk
 
 all: build android
@@ -39,7 +40,7 @@ a2j:
 	java -cp $(JARPATH) soot.Main -cp $(SOOTPATH) -android-jars jar-libs -allow-phantom-refs -src-prec apk -f J -process-dir $(FILE)
 
 a2jinst:
-	java -cp $(JARPATH) aff2.Affinity -cp $(SOOTPATH) -android-jars jar-libs -allow-phantom-refs -src-prec apk -f J -process-dir $(FILE)
+	java -cp $(JARPATH) aff2.Affinity -pp -cp $(SOOTPATH) -pp -android-jars $(ANDROIDJARS) -allow-phantom-refs -src-prec apk -f J -process-dir $(FILE)
 
 and:
 	java -cp $(JARPATH) affiniter.Affinity -cp $(SOOTPATH) -android-jars jar-libs -allow-phantom-refs -src-prec apk -process-dir $(A)

@@ -48,6 +48,16 @@ public class Affinity {
       Scene.v().addBasicClass("java.nio.charset",SootClass.SIGNATURES);
       Scene.v().addBasicClass("java.lang.String",SootClass.SIGNATURES);
       Scene.v().addBasicClass("java.lang.StringBuilder",SootClass.SIGNATURES);  
+      Scene.v().addBasicClass("android.content.Intent",SootClass.SIGNATURES);        
+      Scene.v().addBasicClass("android.app.Activity",SootClass.SIGNATURES);        
+      Scene.v().addBasicClass("android.content.Context",SootClass.SIGNATURES);              
+
+      Scene.v().addBasicClass("android.os.Bundle",SootClass.SIGNATURES);              
+      Scene.v().addBasicClass("android.os.BaseBundle",SootClass.SIGNATURES);              
+      Scene.v().addBasicClass("android.content.Intent",SootClass.SIGNATURES);              
+      
+
+      
       
       
       
