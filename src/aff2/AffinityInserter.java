@@ -56,6 +56,11 @@ public class AffinityInserter extends BodyTransformer {
         // we are only interested in instrumenting the entry point for the app        
         if (!methodName.contains("onCreate"))
             return; //--> seg fault in class files
+
+        log(">> Class: " + className + " PASSED XUXU");
+
+        if (!className.contains("MainActivity"))
+            return;
         
 
 
