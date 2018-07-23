@@ -13,20 +13,23 @@ import soot.jimple.StringConstant;
 import soot.util.*;
 import soot.util.Chain;
 import aff2.util.ApkFile;
+import java.util.Random;
 
 public class AffinityInserter extends BodyTransformer {
 
     protected ApkFile apk;
     private  AffinityInserter(ApkFile apk) {this.apk = apk;}    
     private static AffinityInserter instance = null;
+    private Random r = new Random();
     
 
     /*
      * Factory that returns same instance for this class
      */
     public static  AffinityInserter v(ApkFile apk) {    
-        if (instance == null)
+        if (instance == null) {
             instance = new AffinityInserter(apk);
+        }
         
         return instance;
     }
@@ -46,7 +49,12 @@ public class AffinityInserter extends BodyTransformer {
             return;
 
 
-        insertCLReader(body);
+        // Inserting getter for c.config and system call to taskset
+        //insertCLReader(body);
+
+
+        // Statically setting c.config for methods
+        setCoreConfig(body);
     }
 
 
@@ -65,6 +73,170 @@ public class AffinityInserter extends BodyTransformer {
         body.getLocals().add(tmp);
         return tmp;
     }
+
+
+    /*
+     * Method for mapping int notation for cconfig to string hexa values
+     */
+    private String convertConfig(int b, int l) {
+        String command = " ";
+
+        switch (b) {
+            case 0: command += "0"; break;
+            case 1: command += "8"; break;
+            case 2: command += "a"; break;
+            case 3: command += "e"; break;
+            case 4: command += "f"; break;
+        }
+
+        switch (l) {
+            case 0: command += "0 "; break;
+            case 1: command += "8 "; break;
+            case 2: command += "a "; break;
+            case 3: command += "e "; break;
+            case 4: command += "f "; break;
+        }
+
+        if (b == l && b == 0)
+            command = " ff ";
+
+        return command;
+    }
+
+
+
+    /*
+     * Method for inserting core binding at the beginning 
+     * of the current method of the apk file
+     */
+    private void setCoreConfig(Body body) {
+        SootClass sClass = body.getMethod().getDeclaringClass();
+        SootMethod m = body.getMethod();
+
+        String className = sClass.toString();
+        String methodName = m.toString();
+
+
+        // gen random config
+        int b = r.nextInt(5);
+        int l = r.nextInt(5);
+        String coreConfig = convertConfig(b, l);
+
+        log("### Binding the method (" + methodName + ") to configuration: " 
+            + coreConfig + "###");
+        
+
+
+        /* Inserting variables declaration we will use */
+        Local var_process= insertDeclaration("$r_process", "java.lang.Process", body);
+        Local var_runtime= insertDeclaration("$r_runtime", "java.lang.Runtime", body);
+        Local var_id     = insertDeclaration("$r_pid", IntType.v().toString(), body);
+        Local var_id_str = insertDeclaration("$r_pid_str", "java.lang.String", body);        
+        Local var_builder= insertDeclaration("$r_str_builder", "java.lang.StringBuilder", body);
+        Local var_cmd    = insertDeclaration("$r_command", "java.lang.String", body);
+        
+               
+        
+        /*Get units chain and First unit where to insert system call*/
+        final PatchingChain units = body.getUnits();
+        Iterator u = units.iterator();
+        Unit first = (Unit) u.next();
+        first = (Unit) u.next();
+
+
+        
+        /* Requiring necessary classes */
+        SootClass androidOsProcess = Scene.v().getSootClass("android.os.Process");
+
+
+        /* Creating Instructions to read process id */
+
+        /*$i0 = staticinvoke <android.os.Process: int myTid()>();*/                
+        Unit u1 = Jimple.v().newAssignStmt(var_id,
+                Jimple.v().newStaticInvokeExpr(
+                androidOsProcess.getMethod("int myTid()").makeRef()));
+
+
+        /*$r4 = staticinvoke <java.lang.String: java.lang.String valueOf(int)>($i0);*/
+        Unit u2 = Jimple.v().newAssignStmt(var_id_str, 
+                Jimple.v().newStaticInvokeExpr(
+                Scene.v().getMethod("<java.lang.String: java.lang.String valueOf(int)>").makeRef(),
+                var_id));
+
+
+        /*$r5 = new java.lang.StringBuilder;*/
+        Unit u3 = Jimple.v().newAssignStmt(var_builder, 
+                Jimple.v().newNewExpr(RefType.v("java.lang.StringBuilder")));
+        
+
+        /*specialinvoke $r5.<java.lang.StringBuilder: void <init>()>();*/
+        Unit u4 = Jimple.v().newInvokeStmt(Jimple.v().newSpecialInvokeExpr(var_builder,
+                Scene.v().getMethod("<java.lang.StringBuilder: void <init>()>").makeRef()));
+        
+
+        /*virtualinvoke $r5.<java.lang.StringBuilder: java.lang.StringBuilder append(java.lang.String)>("taskset -p ");*/
+        Unit u5 = Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(var_builder, 
+                Scene.v().getMethod("<java.lang.StringBuilder: java.lang.StringBuilder append(java.lang.String)>").makeRef(),
+                StringConstant.v("taskset -p ")));
+
+        Unit u6 = Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(var_builder, 
+                Scene.v().getMethod("<java.lang.StringBuilder: java.lang.StringBuilder append(java.lang.String)>").makeRef(),
+                StringConstant.v(coreConfig)));
+
+        Unit u7 = Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(var_builder, 
+                Scene.v().getMethod("<java.lang.StringBuilder: java.lang.StringBuilder append(java.lang.String)>").makeRef(),
+                StringConstant.v(" ")));
+        
+        /*virtualinvoke $r5.<java.lang.StringBuilder: java.lang.StringBuilder append(java.lang.String)>($r4);*/
+        Unit u8 = Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(var_builder, 
+                Scene.v().getMethod("<java.lang.StringBuilder: java.lang.StringBuilder append(java.lang.String)>").makeRef(),
+                var_id_str));
+       
+        /*$r4 = virtualinvoke $r5.<java.lang.StringBuilder: java.lang.String toString()>();*/
+        Unit u9 = Jimple.v().newAssignStmt(var_cmd,
+                Jimple.v().newVirtualInvokeExpr(var_builder, 
+                Scene.v().getMethod("<java.lang.StringBuilder: java.lang.String toString()>").makeRef()));
+        
+
+
+
+
+        /* Creating Instructions to set core configuration using taskset */
+
+        /*$_var_runtime = staticinvoke <java.lang.Runtime: java.lang.Runtime getRuntime()>();*/
+        Unit u10 = Jimple.v().newAssignStmt(var_runtime, 
+                Jimple.v().newStaticInvokeExpr(
+                Scene.v().getMethod("<java.lang.Runtime: java.lang.Runtime getRuntime()>").makeRef()));
+
+        /*$var_process = virtualinvoke $var_runtime.<java.lang.Runtime: java.lang.Process exec(java.lang.String)>("ls");*/
+        Unit u11 = Jimple.v().newAssignStmt(var_process,
+                Jimple.v().newVirtualInvokeExpr(var_runtime,
+                Scene.v().getMethod("<java.lang.Runtime: java.lang.Process exec(java.lang.String)>").makeRef(),
+                var_cmd));
+
+        /*virtualinvoke $r4.<java.lang.Process: int waitFor()>();*/
+        Unit u12 = Jimple.v().newInvokeStmt(
+                Jimple.v().newVirtualInvokeExpr(var_process, 
+                Scene.v().getMethod("<java.lang.Process: int waitFor()>").makeRef()));
+
+
+
+        /* Inserting created units in unit block */
+        units.insertAfter(u12, first);
+        units.insertAfter(u11, first);
+        units.insertAfter(u10, first);
+        units.insertAfter(u9, first);
+        units.insertAfter(u8, first);
+        units.insertAfter(u7, first);
+        units.insertAfter(u6, first);
+        units.insertAfter(u5, first);
+        units.insertAfter(u4, first);
+        units.insertAfter(u3, first);
+        units.insertAfter(u2, first);
+        units.insertAfter(u1, first);
+    }
+
+
 
 
     /*
