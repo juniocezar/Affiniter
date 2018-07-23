@@ -17,14 +17,38 @@ import aff2.util.ApkFile;
 public class AffinityInserter extends BodyTransformer {
 
     protected ApkFile apk;
-    private  AffinityInserter(ApkFile apk) {this.apk = apk;}
-    private boolean instantiated = false;
+    private  AffinityInserter(ApkFile apk) {this.apk = apk;}    
+    private static AffinityInserter instance = null;
     
-    // Uma abordagem comum no soot é declarar o construtor como privado e ter
-    // um metodo estático e publico .v responsável pela instanciação do objeto    
-    public static  AffinityInserter v(ApkFile apk) {        
-        return new AffinityInserter(apk);
+
+    /*
+     * Factory that returns same instance for this class
+     */
+    public static  AffinityInserter v(ApkFile apk) {    
+        if (instance == null)
+            instance = new AffinityInserter(apk);
+        
+        return instance;
     }
+
+
+    protected  void internalTransform(Body body, String phaseName, Map options) {
+        SootClass sClass = body.getMethod().getDeclaringClass();
+        SootMethod m = body.getMethod();
+
+        String className = sClass.toString();
+        String methodName = m.toString();
+        
+        // Simple bypass to avoid analyzing the code of libs.
+        // must be removed, since it might leave some important
+        // user defined classes aside.        
+        if (!className.contains(apk.getPackageName()))
+            return;
+
+
+        insertCLReader(body);
+    }
+
 
     /*
      * Log Method
@@ -43,7 +67,14 @@ public class AffinityInserter extends BodyTransformer {
     }
 
 
-    protected  void internalTransform(Body body, String phaseName, Map options) {
+    /*
+     * Method for inserting a command line reader that
+     * searches for the argument configuration. Once it is read
+     * This method also inserts a system call to taskset, leading
+     * to a binding of app instance -> core configuration 
+     */
+    private void insertCLReader(Body body) {
+
         SootClass sClass = body.getMethod().getDeclaringClass();
         SootMethod m = body.getMethod();
 
@@ -53,20 +84,18 @@ public class AffinityInserter extends BodyTransformer {
         if (!className.contains(apk.getPackageName()))
             return; //--> seg fault in class files
         
-        // we are only interested in instrumenting the entry point for the app        
-        if (!methodName.contains("onCreate"))
-            return; //--> seg fault in class files
-
-        log(">> Class: " + className + " PASSED XUXU");
-
+        // bug: must get the real main activity in the apk file
+        log("### Checking if class: (" + className + ") is an entry point ###");
         if (!className.contains("MainActivity"))
             return;
-        
 
+        // we are only interested in instrumenting the entry point for the app        
+        log("### Checking if method: (" + methodName + ") is valid ###");
+        if (!methodName.contains("onCreate(android.os.Bundle)"))
+            return; //--> seg fault in class files
 
 
         log("###### Instrumenting " + className + "########");
-
 
         /* Inserting variables declaration we will use */
         Local var_this   = insertDeclaration("$r_this", sClass.getType().toString(), body);
@@ -238,6 +267,7 @@ public class AffinityInserter extends BodyTransformer {
         units.insertAfter(u4, first);
         units.insertAfter(u3, first);
         units.insertAfter(u2, first);
-        //units.insertBefore(u1, first);        
+
     }
+
 }

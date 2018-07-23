@@ -24,7 +24,7 @@ apktool b ${app::-4} -o toSign-${app}
 
 #keytool -genkey -v -keystore my-release-key.keystore -alias alias_name -keyalg RSA -keysize 2048 -validity 10000
 zipalign -v 4 toSign-${app} ../install/$app
-jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ../key/debug.keystore ../install/$app alias_name
+echo asdasd | jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore ../key/debug.keystore ../install/$app alias_name
 
 cd ..
 rm -r _tmp/
