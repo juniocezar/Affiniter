@@ -45,8 +45,9 @@ public class AffinityInserter extends BodyTransformer {
         // Simple bypass to avoid analyzing the code of libs.
         // must be removed, since it might leave some important
         // user defined classes aside.        
-        if (!className.contains(apk.getPackageName()))
-            return;
+
+        //if (!className.contains(apk.getPackageName()))
+        //    return;
 
 
         // Inserting getter for c.config and system call to taskset
@@ -79,7 +80,7 @@ public class AffinityInserter extends BodyTransformer {
      * Method for mapping int notation for cconfig to string hexa values
      */
     private String convertConfig(int b, int l) {
-        String command = " ";
+        String command = "";
 
         switch (b) {
             case 0: command += "0"; break;
@@ -98,7 +99,7 @@ public class AffinityInserter extends BodyTransformer {
         }
 
         if (b == l && b == 0)
-            command = " ff ";
+            command = "ff ";
 
         return command;
     }
@@ -122,10 +123,7 @@ public class AffinityInserter extends BodyTransformer {
         int l = r.nextInt(5);
         String coreConfig = convertConfig(b, l);
 
-        log("### Binding the method (" + methodName + ") to configuration: " 
-            + coreConfig + "###");
         
-
 
         /* Inserting variables declaration we will use */
         Local var_process= insertDeclaration("$r_process", "java.lang.Process", body);
@@ -139,9 +137,14 @@ public class AffinityInserter extends BodyTransformer {
         
         /*Get units chain and First unit where to insert system call*/
         final PatchingChain units = body.getUnits();
-        Iterator u = units.iterator();
+        Iterator u = units.snapshotIterator();
         Unit first = (Unit) u.next();
-        first = (Unit) u.next();
+
+        if (units.size() < 20)
+            return;
+
+        log("### Binding method (" + methodName + "), with " + units.size() + " units to configuration: " 
+            + coreConfig + "###");        
 
 
         
