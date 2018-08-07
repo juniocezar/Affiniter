@@ -1,7 +1,7 @@
 JARPATH := src:.:input/classes:bin:libs/jasmin-2.5.0.jar:libs/polyglot.jar:libs/soot-2.5.1.jar:libs/android.jar:bin:libs/flowdroid/AXMLPrinter2.jar:libs/flowdroid/axml-2.0.jar:/libs/flowdroid/guala.jar:bin:bin/infoflow/axml:libs/flowdroid/axml-2.1.jar
 SOOTPATH := .:input/classes:/usr/lib/jvm/java-8-openjdk-amd64/jre/lib/rt.jar:libs/android.jar
 ANDROIDJARS := libs/
-FILE := app-debug.apk
+APK ?= app-debug.apk
 OUT ?= dex
 
 
@@ -23,32 +23,32 @@ prebuild:
 	javac -cp $(JARPATH)  ./src/infoflow/axml/parsers/AXML20Parser.java -d bin
 
 build:
-	javac -cp $(JARPATH)  ./src/aff2/AffinityInserter.java -d bin
-	javac -cp $(JARPATH)  ./src/aff2/Affinity.java -d bin
-	javac -cp $(JARPATH)  ./src/aff2/util/ApkFile.java -d bin
+	javac -cp $(JARPATH)  ./src/times/TimesInst.java -d bin
+	javac -cp $(JARPATH)  ./src/times/Times.java -d bin
+	javac -cp $(JARPATH)  ./src/times/util/ApkFile.java -d bin
 
 class:
 	clear
-	java -cp $(JARPATH) affiniter.Affinity -cp $(SOOTPATH) -src-prec class -p jb use-original-names  HelloWorld
+	java -cp $(JARPATH) affiniter.Times -cp $(SOOTPATH) -src-prec class -p jb use-original-names  HelloWorld
 
 S:
 	clear
-	java -cp $(JARPATH) affiniter.Affinity -cp $(SOOTPATH) -src-prec class -p jb use-original-names $(OUT) $(FILE)
+	java -cp $(JARPATH) affiniter.Times -cp $(SOOTPATH) -src-prec class -p jb use-original-names $(OUT) $(FILE)
 
 android:
-	java -cp $(JARPATH) affiniter.Affinity -cp $(SOOTPATH) -android-jars jar-libs -allow-phantom-refs -src-prec apk -process-dir $(FILE)
+	java -cp $(JARPATH) affiniter.Times -cp $(SOOTPATH) -android-jars jar-libs -allow-phantom-refs -src-prec apk -process-dir $(APK)
 
 a2j:
-	java -cp $(JARPATH) soot.Main -cp $(SOOTPATH) -android-jars jar-libs -allow-phantom-refs -src-prec apk -f J -process-dir $(FILE)
+	java -cp $(JARPATH) soot.Main -cp $(SOOTPATH) -android-jars jar-libs -allow-phantom-refs -src-prec apk -f J -process-dir $(APK)
 
-a2jinst:
-	java -cp $(JARPATH) aff2.Affinity -pp -cp $(SOOTPATH) -pp -android-jars $(ANDROIDJARS) -allow-phantom-refs -src-prec apk -f J -process-dir $(FILE)
+a2ji:
+	java -cp $(JARPATH) times.Times -pp -cp $(SOOTPATH) -pp -android-jars $(ANDROIDJARS) -allow-phantom-refs -src-prec apk -f J -process-dir $(APK)
 
 and:
-	java -cp $(JARPATH) affiniter.Affinity -cp $(SOOTPATH) -android-jars jar-libs -allow-phantom-refs -src-prec apk -process-dir $(A)
+	java -cp $(JARPATH) affiniter.Times -cp $(SOOTPATH) -android-jars jar-libs -allow-phantom-refs -src-prec apk -process-dir $(A)
 
 apk:
-	java -cp $(JARPATH) aff2.Affinity -pp -cp $(SOOTPATH) -pp -android-jars $(ANDROIDJARS) -allow-phantom-refs -src-prec apk -f $(OUT) -process-dir $(APK)
+	java -cp $(JARPATH) times.Times -pp -cp $(SOOTPATH) -pp -android-jars $(ANDROIDJARS) -allow-phantom-refs -src-prec apk -f $(OUT) -process-dir $(APK)
 
 
 limpa:
